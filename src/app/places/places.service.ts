@@ -18,9 +18,20 @@ export class PlacesService {
     return this.fetchPlaces('places', 'Could not load available places.');
   }
 
-  loadUserPlaces() {}
+  loadUserPlaces(): Observable<Place[] | undefined> {
+    return this.httpClient
+      .get<{ places: Place[] }>(`${this.url}/user-places`, {
+        observe: 'response',
+      })
+      .pipe(
+        map((response) => response.body?.places),
+        catchError(({ error }) => {
+          return throwError(() => new Error(error?.message));
+        })
+      );
+  }
 
-  addPlaceToUserPlaces(placeId: string) {
+  addPlaceToUserPlaces(placeId: string): Observable<Object> {
     return this.httpClient.put(`${this.url}/user-places`, {
       placeId,
     });

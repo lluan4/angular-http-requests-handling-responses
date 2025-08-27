@@ -5,6 +5,7 @@ import { PlacesComponent } from '../places.component';
 import { HttpClient } from '@angular/common/http';
 import { Place } from '../place.model';
 import { catchError, map, Subscription, throwError } from 'rxjs';
+import { PlacesService } from '../places.service';
 
 @Component({
   selector: 'app-user-places',
@@ -14,7 +15,7 @@ import { catchError, map, Subscription, throwError } from 'rxjs';
   imports: [PlacesContainerComponent, PlacesComponent],
 })
 export class UserPlacesComponent implements OnInit {
-  private httpClient = inject(HttpClient);
+  private placesService = inject(PlacesService);
   private destroyRef = inject(DestroyRef);
 
   private readonly url: string = 'http://localhost:3000';
@@ -25,16 +26,8 @@ export class UserPlacesComponent implements OnInit {
 
   ngOnInit() {
     this.status.set('loading');
-    const subscription$: Subscription = this.httpClient
-      .get<{ places: Place[] }>(`${this.url}/user-places`, {
-        observe: 'response',
-      })
-      .pipe(
-        map((response) => response.body?.places),
-        catchError(({ error }) => {
-          return throwError(() => new Error(error?.message));
-        })
-      )
+    const subscription$: Subscription = this.placesService
+      .loadUserPlaces()
       .subscribe({
         next: (places) => {
           this.places.set(places);
