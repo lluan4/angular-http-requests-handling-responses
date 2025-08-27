@@ -1,18 +1,11 @@
-import {
-  Component,
-  DestroyRef,
-  inject,
-  OnDestroy,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 
-import { Place } from '../place.model';
-import { PlacesComponent } from '../places.component';
-import { PlacesContainerComponent } from '../places-container/places-container.component';
 import { HttpClient } from '@angular/common/http';
 import { catchError, map, Subscription, throwError } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Place } from '../place.model';
+import { PlacesContainerComponent } from '../places-container/places-container.component';
+import { PlacesComponent } from '../places.component';
+import { PlacesService } from '../places.service';
 
 @Component({
   selector: 'app-available-places',
@@ -22,7 +15,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   imports: [PlacesComponent, PlacesContainerComponent],
 })
 export class AvailablePlacesComponent implements OnInit {
-  private httpClient = inject(HttpClient);
+  private placesServices = inject(PlacesService);
   private destroyRef = inject(DestroyRef);
 
   places = signal<Place[] | undefined>(undefined);
@@ -31,16 +24,8 @@ export class AvailablePlacesComponent implements OnInit {
 
   ngOnInit() {
     this.status.set('loading');
-    const subscription$: Subscription = this.httpClient
-      .get<{ places: Place[] }>('http://localhost:3000/places', {
-        observe: 'response',
-      })
-      .pipe(
-        map((response) => response.body?.places),
-        catchError(({ error }) => {
-          return throwError(() => new Error(error?.message));
-        })
-      )
+    const subscription$: Subscription = this.placesServices
+      .loadAvailablePlaces()
       .subscribe({
         next: (places) => {
           this.places.set(places);
@@ -54,6 +39,17 @@ export class AvailablePlacesComponent implements OnInit {
 
     this.destroyRef.onDestroy(() => {
       subscription$.unsubscribe();
+    });
+  }
+
+  onSelectPlace(selectedPlace: Place) {
+    this.placesServices.addPlaceToUserPlaces(selectedPlace.id).subscribe({
+      next: (response) => {
+        console.log(response);
+      },
+      error: (error) => {
+        console.log(error);
+      },
     });
   }
 }

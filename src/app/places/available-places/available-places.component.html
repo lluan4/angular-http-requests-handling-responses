@@ -10,7 +10,7 @@
       <p class="fallback-text">Unfortunately, no places could be found.</p>
     }
     @case('success') {
-      <app-places [places]="places()!" />
+      <app-places [places]="places()!" (selectPlace)="onSelectPlace($event)"/>
     }
     @default {
       <p class="fallback-text">An error occurred while loading places.</p>
