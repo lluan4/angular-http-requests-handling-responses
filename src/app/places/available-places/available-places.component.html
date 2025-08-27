@@ -1,7 +1,19 @@
 <app-places-container title="Available Places">
-  @if (places()) {
-  <app-places [places]="places()!" />
-  } @else if (places()?.length === 0) {
-  <p class="fallback-text">Unfortunately, no places could be found.</p>
+  @switch (status()){
+    @case('loading') {
+      <p class="fallback-text">Loading places...</p>
+    }
+    @case('error') {
+      <p class="fallback-text">{{ error() }}</p>
+    }
+    @case('empty') {
+      <p class="fallback-text">Unfortunately, no places could be found.</p>
+    }
+    @case('success') {
+      <app-places [places]="places()!" />
+    }
+    @default {
+      <p class="fallback-text">An error occurred while loading places.</p>
+    }
   }
 </app-places-container>
