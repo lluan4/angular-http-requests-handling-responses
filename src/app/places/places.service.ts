@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 
 import { Place } from './place.model';
 import { HttpClient } from '@angular/common/http';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -25,16 +25,26 @@ export class PlacesService {
       })
       .pipe(
         map((response) => response.body?.places),
+        tap({
+          next: (places) => places && this.userPlaces.set(places),
+        }),
         catchError(({ error }) => {
           return throwError(() => new Error(error?.message));
         })
       );
   }
 
-  addPlaceToUserPlaces(placeId: string): Observable<Object> {
-    return this.httpClient.put(`${this.url}/user-places`, {
-      placeId,
-    });
+  addPlaceToUserPlaces(place: Place): Observable<Object> {
+    this.userPlaces.update((places) => [...places, place]);
+    return this.httpClient
+      .put(`${this.url}/user-places`, {
+        placeId: place.id,
+      })
+      .pipe(
+        tap({
+          complete: this.loadUserPlaces,
+        })
+      );
   }
 
   removeUserPlace(place: Place) {}

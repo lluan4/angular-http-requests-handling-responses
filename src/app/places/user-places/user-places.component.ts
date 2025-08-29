@@ -20,7 +20,7 @@ export class UserPlacesComponent implements OnInit {
 
   private readonly url: string = 'http://localhost:3000';
 
-  places = signal<Place[] | undefined>(undefined);
+  places = this.placesService.loadedUserPlaces;
   error = signal<string>('');
   status = signal<'loading' | 'success' | 'empty' | 'error'>('loading');
 
@@ -30,7 +30,6 @@ export class UserPlacesComponent implements OnInit {
       .loadUserPlaces()
       .subscribe({
         next: (places) => {
-          this.places.set(places);
           this.status.set(places?.length ? 'success' : 'empty');
         },
         error: (error: Error) => {
